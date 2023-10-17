@@ -15,7 +15,7 @@ int BackENB = 12;
 
 int i = 0;
 int UltrasonicTrig = 4;
-int UltrasonicEcho = 3;// Replace with the actual pin number for your ultrasonic sensor
+int UltrasonicEcho = 3;
 int obstacle_distance = 10; // You can adjust this distance as needed
 
 // Define states for the robot
@@ -23,8 +23,7 @@ enum RobotState {
   MOVE_FORWARD,
   MOVE_RIGHT,
   MOVE_BACKWARD,
-  MOVE_LEFT,
-  STOP
+  MOVE_LEFT
 };
 
 RobotState currentState = MOVE_FORWARD;
@@ -43,34 +42,35 @@ void setup() {
   pinMode(BackIn4, OUTPUT);
   pinMode(BackENA, OUTPUT);
   pinMode(BackENB, OUTPUT);
+  // Set the Ultrasonic pins
   pinMode(UltrasonicTrig, OUTPUT);  
-  // Set the ultrasonic sensor pin as INPUT
   pinMode(UltrasonicEcho, INPUT);
 }
 
-int checkUtrasonic(){
-  long duration;
-  int distance;
-  int timeout = 38; //ms
-  
-  // Clears the trigPin
+int checkUltrasonic(){
+  unsigned long duration = 0;
+  int distance = 0;
+  int timeout = 38000; //us
+  // Clears the trigger pin
   digitalWrite(UltrasonicTrig, LOW);
-  delay(2);
-  // Sets the trigPin on HIGH state for 10 micro seconds
+  delayMicroseconds(2);
+  // Sets the trigger pin on HIGH state for 10 micro seconds
   digitalWrite(UltrasonicTrig, HIGH);
-  delay(10);
+  delayMicroseconds(10);
   digitalWrite(UltrasonicTrig, LOW);
-  // Reads the echoPin, returns the sound wave travel time in microseconds
-  duration = pulseIn(UltrasonicEcho, HIGH);
+  // Reads the echo pin, returns the sound wave travel time in microseconds
+  duration = pulseIn(UltrasonicEcho, HIGH, timeout);
   // Calculating the distance in cm's
   distance = duration * 0.034 / 2;
-  // Prints the distance on the Serial Monitor
-  Serial.print("Distance: ");
-  Serial.println(distance);
-  duration = pulseIn(UltrasonicEcho, HIGH, timeout)
+  return distance;
 }
 void moveForward() {
-  //Code to move forward
+  analogWrite(FrontENA, 100); //we should calibrate this value
+  analogWrite(FrontENB, 100);
+  digitalWrite(FrontIn1, HIGH); //and actuallY do this the right way cause im not sure at all about this
+  digitalWrite(FrontIn2, LOW);
+  digitalWrite(FrontIn3, HIGH);
+  digitalWrite(FrontIn4, LOW);
   
 }
 
@@ -87,27 +87,24 @@ void moveLeft() {
 }
 
 void stopMotors() {
-  analogWrite(ena, 100);
-  analogWrite(enB, 100);
-  digitalWrite(in1, HIGH);
-  digitalWrite(in2, LOW);
-  
-  digitalWrite(in3, HIGH);
-  digitalWrite(in4, LOW);
+  analogWrite(FrontENA, 0);
+  analogWrite(FrontENB, 0);
+  analogWrite(BackENA, 0);
+  analogWrite(BackENB, 0); 
 }
 
 void loop() {
   // Get ultrasonic measurement
-  int distance = digitalRead(Ultrasonic); 
+  int distance = checkUltrasonic(); 
   
   switch (currentState) {
     case MOVE_FORWARD:
       if (distance < obstacle_distance) {
-        StopMotors();
+        stopMotors();
         delay(5000);
       } 
       else if (i>5){
-        StopMotors();
+        stopMotors();
         currentState = MOVE_RIGHT;
         i = 0;
       }
@@ -120,11 +117,11 @@ void loop() {
 
     case MOVE_RIGHT:
       if (distance < obstacle_distance) {
-        StopMotors();
+        stopMotors();
         delay(5000);
       } 
       else if (i>5){
-        StopMotors();
+        stopMotors();
         currentState = MOVE_BACKWARD;
         i = 0;
       }
@@ -137,11 +134,11 @@ void loop() {
 
     case MOVE_BACKWARD:
       if (distance < obstacle_distance) {
-        StopMotors();
+        stopMotors();
         delay(5000);
       } 
       else if (i>5){
-        StopMotors();
+        stopMotors();
         currentState = MOVE_LEFT;
         i = 0;
       }
@@ -154,11 +151,11 @@ void loop() {
 
     case MOVE_LEFT:      
       if (distance < obstacle_distance) {
-        StopMotors();
+        stopMotors();
         delay(5000);
       } 
       else if (i>5){
-        StopMotors();
+        stopMotors();
         currentState = MOVE_FORWARD;
         i = 0;
         delay(3000);
